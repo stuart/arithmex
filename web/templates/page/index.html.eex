@@ -1,0 +1,61 @@
+<div>
+  <p>
+    Arithmex is a version of the numbers game from the SBS show "Letters and Numbers"
+  </p>
+
+  <h1>How to Play</h1>
+  <p>
+    A puzzle consists of a set of six numbers chosen randomly from
+    either the 'small' or 'large' numbers and a randomly chosen target
+    number between 100 and 999.
+  </p>
+
+  <p>
+    Small numbers are 1, 2, 3, 4, 5, 6, 7, 8, and 9. Large numbers are 25, 50, 75, and 100.
+    A puzzle may contain 0 to 4 large numbers and the rest small numbers.
+  </p>
+
+  <p>
+    The players' task is to find an arithmetic expression using
+    chosen numbers that evaluates to the target number.
+  </p>
+
+  <p>
+    Numbers may be added, subtracted, multiplied and divided. The result
+    of division must be an integer, no fractions or decimals are allowed.
+  </p>
+
+  <p>
+    Players have 30 seconds within which to find a solution. They score
+    10 points for a correct equation, 7 points for getting within 5 of the target
+    and 5 points for being within 10 of the target number.
+  </p>
+
+  <p>
+    <button class="btn btn-default">PLAY!</button>
+  </p>
+
+  <div class="puzzle">
+    <h2>Example Game</h2>
+    <div class="timer_wrap">
+      <div class="large_small"><%= @puzzle.n_large %> large and <%= 6 - @puzzle.n_large %> small numbers</div>
+      <div class="timer"></div>
+    </div>
+    <div class="solution"><%= solution_html(@puzzle) %> &equals; <%= @puzzle.target %></div>
+    <div class="number target"><%= @puzzle.target %></div>
+    <ul class="numbers">
+      <%= for number <- @puzzle.numbers do %>
+        <li class="number"><%= number %></li>
+      <%= end %>
+    </ul>
+
+    <ul class="operators">
+      <li class="operator">&plus;</li>
+      <li class="operator">&minus;</li>
+      <li class="operator">&times;</li>
+      <li class="operator">&divide;</li>
+      <li class="operator">(</li>
+      <li class="operator">)</li>
+    </ul>
+  </div>
+</div>

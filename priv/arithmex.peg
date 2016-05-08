@@ -1,0 +1,42 @@
+%% -*- coding: utf-8 -*-
+% ARITHMEX PARSER DEFINITION
+
+expr <- term (add_sub term)*`
+  case Node of
+    [Int, []] when is_integer(Int) -> Int;
+    [A, Exprs] when is_list(Exprs) -> lists:foldl(fun
+      ([<<$+>>,X], Total) -> Total + X;
+      ([<<$->>,X], Total) -> Total - X;
+      ([<<16#2212/utf8>>,X], Total) -> Total - X
+      end,
+    A, Exprs);
+    _ ->Node
+  end
+`;
+
+term <- factor (mul_div factor)*`
+  case Node of
+    [Int, []] when is_integer(Int) -> Int;
+    [A, Exprs] when is_list(Exprs) -> lists:foldl(fun
+      ([<<$*>>,X], Total) -> Total * X;
+      ([<<16#00d7/utf8>>,X], Total) -> Total * X;
+      ([<<$/>>,X], Total) -> Total div X;
+      ([<<16#00f7/utf8>>,X], Total) -> Total div X
+      end,
+    A, Exprs);
+    _ -> Node
+  end
+`;
+
+factor <- '(' expr ')' / decimal`
+  case Node of
+    [_, Expr, _]-> Expr;
+    Int when is_integer(Int) -> Int
+  end
+`;
+
+decimal <- [-]? [0-9]+ `binary_to_integer(list_to_binary(Node))`;
+
+add_sub <- [+-\\x{2212}];
+
+mul_div <- [*/\\x{00d7}\\x{00f7}];
