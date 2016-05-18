@@ -14,6 +14,7 @@ defmodule Arithmex.PuzzleGeneratorTest do
      assert [] = Enum.filter(puzzle.numbers, fn(n) -> n > 10 end)
   end
 
+  @tag :proptest
   property "It assigns a solution to the puzzle" do
     forall({n_large, rand} <- {valid_n_large, bool()}) do
       puzzle = Arithmex.PuzzleGenerator.generate(n_large, rand)
@@ -24,6 +25,7 @@ defmodule Arithmex.PuzzleGeneratorTest do
     end
   end
 
+  @tag :proptest
   property "It assigns a target number between 100 and 1000" do
     forall({n_large, rand} <- {valid_n_large, bool()}) do
       target = Arithmex.PuzzleGenerator.generate(n_large, rand).target

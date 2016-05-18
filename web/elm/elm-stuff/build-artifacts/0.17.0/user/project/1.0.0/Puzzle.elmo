@@ -1,0 +1,446 @@
+var _user$project$Puzzle$parCount = function (solution) {
+	var parCountToken = F2(
+		function (token, acc) {
+			var _p0 = token.token_type;
+			switch (_p0.ctor) {
+				case 'LPar':
+					return acc + 1;
+				case 'RPar':
+					return acc - 1;
+				default:
+					return acc;
+			}
+		});
+	return A3(_elm_lang$core$List$foldl, parCountToken, 0, solution);
+};
+var _user$project$Puzzle$updateTotal = F2(
+	function (puzzle, newTotal) {
+		return _elm_lang$core$Native_Utils.update(
+			puzzle,
+			{total: newTotal});
+	});
+var _user$project$Puzzle$deleteToken = function (puzzle) {
+	var _p1 = _elm_lang$core$List$tail(puzzle.solution);
+	if (_p1.ctor === 'Just') {
+		return _elm_lang$core$Native_Utils.update(
+			puzzle,
+			{solution: _p1._0});
+	} else {
+		return puzzle;
+	}
+};
+var _user$project$Puzzle$clearSolution = function (puzzle) {
+	return _elm_lang$core$Native_Utils.update(
+		puzzle,
+		{
+			solution: _elm_lang$core$Native_List.fromArray(
+				[])
+		});
+};
+var _user$project$Puzzle$solutionValue = function (solution) {
+	return A2(
+		_elm_lang$core$List$map,
+		function (_) {
+			return _.value;
+		},
+		solution);
+};
+var _user$project$Puzzle$solutionString = function (solution) {
+	return _elm_lang$core$String$concat(
+		_elm_lang$core$List$reverse(
+			_user$project$Puzzle$solutionValue(solution)));
+};
+var _user$project$Puzzle$solutionField = function (puzzle) {
+	return _elm_lang$html$Html$text(
+		_user$project$Puzzle$solutionString(puzzle.solution));
+};
+var _user$project$Puzzle$puzzleDesc = function (puzzle) {
+	return _elm_lang$html$Html$text(
+		_elm_lang$core$String$concat(
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$core$Basics$toString(puzzle.n_large),
+					' large and ',
+					_elm_lang$core$Basics$toString(6 - puzzle.n_large),
+					' small'
+				])));
+};
+var _user$project$Puzzle$puzzleTitle = function (puzzle) {
+	return _elm_lang$html$Html$text(
+		_elm_lang$core$String$concat(
+			_elm_lang$core$Native_List.fromArray(
+				[
+					'Puzzle ',
+					_elm_lang$core$Basics$toString(puzzle.id)
+				])));
+};
+var _user$project$Puzzle$check = _elm_lang$core$Native_Platform.outgoingPort(
+	'check',
+	function (v) {
+		return v;
+	});
+var _user$project$Puzzle$total = _elm_lang$core$Native_Platform.incomingPort('total', _elm_lang$core$Json_Decode$int);
+var _user$project$Puzzle$Puzzle = F7(
+	function (a, b, c, d, e, f, g) {
+		return {id: a, n_large: b, numbers: c, target: d, solution: e, time: f, total: g};
+	});
+var _user$project$Puzzle$Token = F3(
+	function (a, b, c) {
+		return {id: a, token_type: b, value: c};
+	});
+var _user$project$Puzzle$Total = function (a) {
+	return {total: a};
+};
+var _user$project$Puzzle$CalcTotal = function (a) {
+	return {ctor: 'CalcTotal', _0: a};
+};
+var _user$project$Puzzle$subscriptions = function (puzzle) {
+	return _user$project$Puzzle$total(_user$project$Puzzle$CalcTotal);
+};
+var _user$project$Puzzle$Check = {ctor: 'Check'};
+var _user$project$Puzzle$checkKey = function (puzzle) {
+	return A2(
+		_elm_lang$html$Html$li,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('token operator'),
+				_elm_lang$html$Html_Events$onClick(_user$project$Puzzle$Check)
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html$text('=')
+			]));
+};
+var _user$project$Puzzle$Del = {ctor: 'Del'};
+var _user$project$Puzzle$delKey = function (puzzle) {
+	return A2(
+		_elm_lang$html$Html$li,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('token operator'),
+				_elm_lang$html$Html_Events$onClick(_user$project$Puzzle$Del)
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html$text('←')
+			]));
+};
+var _user$project$Puzzle$Clear = {ctor: 'Clear'};
+var _user$project$Puzzle$clearKey = function (puzzle) {
+	return A2(
+		_elm_lang$html$Html$li,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('token operator'),
+				_elm_lang$html$Html_Events$onClick(_user$project$Puzzle$Clear)
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html$text('C')
+			]));
+};
+var _user$project$Puzzle$AddOperator = function (a) {
+	return {ctor: 'AddOperator', _0: a};
+};
+var _user$project$Puzzle$AddNumber = function (a) {
+	return {ctor: 'AddNumber', _0: a};
+};
+var _user$project$Puzzle$RPar = {ctor: 'RPar'};
+var _user$project$Puzzle$LPar = {ctor: 'LPar'};
+var _user$project$Puzzle$NumberToken = {ctor: 'NumberToken'};
+var _user$project$Puzzle$init = function () {
+	var puzzle = {
+		id: 123456,
+		n_large: 2,
+		numbers: _elm_lang$core$Native_List.fromArray(
+			[
+				{id: 1, value: '2', token_type: _user$project$Puzzle$NumberToken},
+				{id: 2, value: '4', token_type: _user$project$Puzzle$NumberToken},
+				{id: 3, value: '7', token_type: _user$project$Puzzle$NumberToken},
+				{id: 4, value: '2', token_type: _user$project$Puzzle$NumberToken},
+				{id: 5, value: '25', token_type: _user$project$Puzzle$NumberToken},
+				{id: 6, value: '100', token_type: _user$project$Puzzle$NumberToken}
+			]),
+		target: 532,
+		solution: _elm_lang$core$Native_List.fromArray(
+			[]),
+		time: 0,
+		total: 0
+	};
+	return {ctor: '_Tuple2', _0: puzzle, _1: _elm_lang$core$Platform_Cmd$none};
+}();
+var _user$project$Puzzle$isAvailable = F2(
+	function (puzzle, token) {
+		var notInSolution = function (solutionToken) {
+			return (!_elm_lang$core$Native_Utils.eq(solutionToken, token)) || (!_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken));
+		};
+		return A2(_elm_lang$core$List$all, notInSolution, puzzle.solution);
+	});
+var _user$project$Puzzle$solutionComplete = function (solution) {
+	var last_added = _elm_lang$core$List$head(solution);
+	var _p2 = last_added;
+	if (_p2.ctor === 'Nothing') {
+		return false;
+	} else {
+		var _p3 = _p2._0;
+		return _elm_lang$core$Native_Utils.eq(
+			_user$project$Puzzle$parCount(solution),
+			0) && (_elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Puzzle$RPar));
+	}
+};
+var _user$project$Puzzle$evaluableSolutionString = function (solution) {
+	var _p4 = _user$project$Puzzle$solutionComplete(solution);
+	if (_p4 === true) {
+		var makeEval = F2(
+			function (token, acc) {
+				var _p5 = token.value;
+				switch (_p5) {
+					case '×':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '*');
+					case '÷':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '/');
+					case '−':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '-');
+					default:
+						return A2(_elm_lang$core$Basics_ops['++'], acc, _p5);
+				}
+			});
+		return A3(_elm_lang$core$List$foldr, makeEval, '', solution);
+	} else {
+		return '';
+	}
+};
+var _user$project$Puzzle$OperatorToken = {ctor: 'OperatorToken'};
+var _user$project$Puzzle$operators = _elm_lang$core$Native_List.fromArray(
+	[
+		{id: 1, value: '+', token_type: _user$project$Puzzle$OperatorToken},
+		{id: 2, value: '−', token_type: _user$project$Puzzle$OperatorToken},
+		{id: 3, value: '×', token_type: _user$project$Puzzle$OperatorToken},
+		{id: 4, value: '÷', token_type: _user$project$Puzzle$OperatorToken},
+		{id: 5, value: '(', token_type: _user$project$Puzzle$LPar},
+		{id: 6, value: ')', token_type: _user$project$Puzzle$RPar}
+	]);
+var _user$project$Puzzle$isValid = F2(
+	function (solution, token) {
+		var last_added = _elm_lang$core$List$head(solution);
+		var _p6 = last_added;
+		if (_p6.ctor === 'Nothing') {
+			return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$LPar);
+		} else {
+			var _p7 = _p6._0.token_type;
+			switch (_p7.ctor) {
+				case 'NumberToken':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$OperatorToken) || (_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$RPar) && (_elm_lang$core$Native_Utils.cmp(
+						_user$project$Puzzle$parCount(solution),
+						0) > 0));
+				case 'OperatorToken':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$LPar);
+				case 'LPar':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken);
+				default:
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$OperatorToken);
+			}
+		}
+	});
+var _user$project$Puzzle$tokenItem = F2(
+	function (puzzle, token) {
+		var typeClass = _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) ? 'number ' : 'operator ';
+		var validClass = A2(_user$project$Puzzle$isValid, puzzle.solution, token) ? 'valid ' : 'invalid ';
+		var takenClass = A2(_user$project$Puzzle$isAvailable, puzzle, token) ? 'available ' : 'taken ';
+		return A2(
+			_elm_lang$html$Html$li,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$class(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'token ',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							typeClass,
+							A2(_elm_lang$core$Basics_ops['++'], takenClass, validClass)))),
+					_elm_lang$html$Html_Events$onClick(
+					_user$project$Puzzle$AddNumber(token))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(token.value)
+				]));
+	});
+var _user$project$Puzzle$view = function (puzzle) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$h2,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_user$project$Puzzle$puzzleTitle(puzzle)
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('timer_wrap')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('large_small')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Puzzle$puzzleDesc(puzzle)
+							])),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('timer')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[])),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('timer_count')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[]))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('solution')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_user$project$Puzzle$solutionField(puzzle),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('total')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text(
+								_elm_lang$core$Basics$toString(puzzle.total))
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$id('target'),
+						_elm_lang$html$Html_Attributes$class('token target')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(puzzle.target))
+					])),
+				A2(
+				_elm_lang$html$Html$ul,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$id('numbers'),
+						_elm_lang$html$Html_Attributes$class('numbers')
+					]),
+				A2(
+					_elm_lang$core$List$map,
+					_user$project$Puzzle$tokenItem(puzzle),
+					puzzle.numbers)),
+				A2(
+				_elm_lang$html$Html$ul,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$id('operators'),
+						_elm_lang$html$Html_Attributes$class('operators')
+					]),
+				A2(
+					_elm_lang$core$List$map,
+					_user$project$Puzzle$tokenItem(puzzle),
+					_user$project$Puzzle$operators)),
+				A2(
+				_elm_lang$html$Html$ul,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$id('edit'),
+						_elm_lang$html$Html_Attributes$class('edit_keys')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_user$project$Puzzle$clearKey(puzzle),
+						_user$project$Puzzle$delKey(puzzle),
+						_user$project$Puzzle$checkKey(puzzle)
+					]))
+			]));
+};
+var _user$project$Puzzle$addTokenToSolution = F2(
+	function (puzzle, token) {
+		return (_elm_lang$core$Native_Utils.eq(
+			A2(_user$project$Puzzle$isAvailable, puzzle, token),
+			true) && A2(_user$project$Puzzle$isValid, puzzle.solution, token)) ? _elm_lang$core$Native_Utils.update(
+			puzzle,
+			{
+				solution: A2(_elm_lang$core$List_ops['::'], token, puzzle.solution)
+			}) : puzzle;
+	});
+var _user$project$Puzzle$update = F2(
+	function (msg, puzzle) {
+		var _p8 = msg;
+		switch (_p8.ctor) {
+			case 'AddNumber':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p8._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'AddOperator':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p8._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Clear':
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Puzzle$clearSolution(puzzle),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Del':
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Puzzle$deleteToken(puzzle),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Check':
+				return {
+					ctor: '_Tuple2',
+					_0: puzzle,
+					_1: _user$project$Puzzle$check(
+						_user$project$Puzzle$evaluableSolutionString(puzzle.solution))
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$updateTotal, puzzle, _p8._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
+var _user$project$Puzzle$main = {
+	main: _elm_lang$html$Html_App$program(
+		{init: _user$project$Puzzle$init, update: _user$project$Puzzle$update, view: _user$project$Puzzle$view, subscriptions: _user$project$Puzzle$subscriptions})
+};

@@ -1,39 +1,44 @@
-module Puzzle where
+port module Puzzle exposing (..)
+
+import Html.App as Html
 import Html exposing (div, ul, li, text, h2)
 import Html.Attributes exposing (class, id)
-import String
-import StartApp.Simple
 import Html.Events exposing (onClick)
-import Time exposing (..)
+import Platform.Cmd as Cmd exposing (Cmd)
+import Task exposing (Task)
+import String
+import Debug exposing (log)
 
-main : Signal Html.Html
+main : Program Never
 main =
-  StartApp.Simple.start {
-    model = init,
-    update = update,
-    view = view
-  }
+  Html.program
+    { init = init, update = update, view = view, subscriptions = subscriptions }
 
-init : Puzzle
+init : (Puzzle, Cmd Msg)
 init =
-  {
-   id = 123456,
-   n_large = 2,
-   numbers = [ {id = 1, value = "2", token_type = NumberToken},
-               {id = 2, value = "4", token_type = NumberToken},
-               {id = 3, value = "7", token_type = NumberToken},
-               {id = 4, value = "2", token_type = NumberToken},
-               {id = 5, value = "25", token_type = NumberToken},
-               {id = 6, value = "100", token_type = NumberToken}
-               ],
-   target = 532,
-   solution = [ ],
-   time = 0
-  }
+  let
+    puzzle =
+      {
+       id = 123456,
+       n_large = 2,
+       numbers = [ {id = 1, value = "2", token_type = NumberToken},
+                   {id = 2, value = "4", token_type = NumberToken},
+                   {id = 3, value = "7", token_type = NumberToken},
+                   {id = 4, value = "2", token_type = NumberToken},
+                   {id = 5, value = "25", token_type = NumberToken},
+                   {id = 6, value = "100", token_type = NumberToken}
+                   ],
+       target = 532,
+       solution = [ ],
+       time = 0,
+       total = 0
+      }
+    in
+    ( puzzle, Cmd.none )
 
 --- VIEW ---
-view : Signal.Address Action -> Puzzle -> Html.Html
-view address puzzle =
+view : Puzzle -> Html.Html Msg
+view puzzle =
   div[][
     h2 [] [ puzzleTitle puzzle ],
     div[ class "timer_wrap"] [
@@ -41,24 +46,26 @@ view address puzzle =
       div [class "timer"][ ],
       div [class "timer_count"] [ ]
     ],
-    div[ class "solution"] [ solutionField puzzle ],
-    div[ id "target", class "number target"] [ text (toString puzzle.target) ],
-    ul[ id "numbers", class "numbers" ] ( List.map (tokenItem address puzzle) puzzle.numbers ),
-    ul[ id "operators", class "operators" ] ( List.map (tokenItem address puzzle) operators ),
-    ul[ id "edit", class "edit_keys"] [ clearKey address puzzle,
-                                        delKey address puzzle ]
+    div[ class "solution"] [ solutionField puzzle,
+        div[ class "total"] [ text (toString (puzzle.total)) ]],
+    div[ id "target", class "token target"] [ text (toString puzzle.target) ],
+    ul[ id "numbers", class "numbers" ] ( List.map (tokenItem puzzle) puzzle.numbers ),
+    ul[ id "operators", class "operators" ] ( List.map (tokenItem puzzle) operators ),
+    ul[ id "edit", class "edit_keys"] [ clearKey puzzle,
+                                        delKey puzzle,
+                                        checkKey puzzle ]
   ]
 
-puzzleTitle : Puzzle -> Html.Html
+puzzleTitle : Puzzle -> Html.Html Msg
 puzzleTitle puzzle =
   text (String.concat [ "Puzzle ", toString(puzzle.id) ])
 
-puzzleDesc : Puzzle -> Html.Html
+puzzleDesc : Puzzle -> Html.Html Msg
 puzzleDesc puzzle =
   text( String.concat( [toString(puzzle.n_large), " large and ", toString(6 - puzzle.n_large), " small"]))
 
-tokenItem : Signal.Address Action -> Puzzle -> Token -> Html.Html
-tokenItem address puzzle token =
+tokenItem : Puzzle -> Token -> Html.Html Msg
+tokenItem puzzle token =
   let
     takenClass =
       if isAvailable puzzle token then "available " else "taken "
@@ -67,13 +74,16 @@ tokenItem address puzzle token =
     typeClass =
       if token.token_type == NumberToken then "number " else "operator "
   in
-    li [ class (typeClass ++ takenClass ++ validClass), onClick address (AddNumber token) ] [ text token.value ]
+    li [ class ("token " ++ typeClass ++ takenClass ++ validClass), onClick (AddNumber token) ] [ text token.value ]
 
-clearKey address puzzle =
-  li [ class ("operator"), onClick address (Clear)] [ text "C" ]
+clearKey puzzle =
+  li [ class ("token operator"), onClick (Clear)] [ text "C" ]
 
-delKey address puzzle =
-  li [ class ("operator"), onClick address (Del)] [ text "←"]
+delKey puzzle =
+  li [ class ("token operator"), onClick (Del)] [ text "←"]
+
+checkKey puzzle =
+  li [ class ("token operator"), onClick (Check)] [ text "="]
 
 operators : List Token
 operators = [
@@ -84,21 +94,42 @@ operators = [
   {id = 5, value = "(", token_type = LPar},
   {id = 6, value = ")", token_type = RPar}]
 
-solutionField : Puzzle -> Html.Html
+solutionField : Puzzle -> Html.Html Msg
 solutionField puzzle =
-  text(String.concat( List.reverse (solutionValue puzzle.solution) ))
+  text(solutionString(puzzle.solution))
 
 solutionValue : List Token -> List String
 solutionValue solution =
   List.map .value solution
 
-update : Action -> Puzzle -> Puzzle
-update action puzzle =
-  case action of
-    AddNumber number -> addTokenToSolution puzzle number
-    AddOperator operator -> addTokenToSolution puzzle operator
-    Clear -> clearSolution puzzle
-    Del -> deleteToken puzzle
+solutionString : Solution -> String
+solutionString solution =
+  String.concat(List.reverse (solutionValue solution))
+
+-- Convert a solution to an evaluable version --
+evaluableSolutionString : Solution -> String
+evaluableSolutionString solution =
+  case solutionComplete solution of
+    True ->
+        let makeEval token acc =
+          case token.value of
+            "×" -> acc ++ "*"
+            "÷" -> acc ++ "/"
+            "−" -> acc ++ "-"
+            val -> acc ++ val
+        in
+          List.foldr makeEval "" solution
+    False -> ""
+
+update : Msg -> Puzzle -> (Puzzle, Cmd Msg)
+update msg puzzle =
+  case msg of
+    AddNumber number -> (addTokenToSolution puzzle number, Cmd.none)
+    AddOperator operator -> (addTokenToSolution puzzle operator, Cmd.none)
+    Clear -> (clearSolution puzzle, Cmd.none)
+    Del -> (deleteToken puzzle, Cmd.none)
+    Check -> (puzzle, check(evaluableSolutionString puzzle.solution))
+    CalcTotal newTotal -> (updateTotal puzzle newTotal, Cmd.none)
 
 addTokenToSolution : Puzzle -> Token -> Puzzle
 addTokenToSolution puzzle token =
@@ -117,6 +148,10 @@ deleteToken puzzle =
     Just t -> { puzzle | solution =  t}
     Nothing -> puzzle
 
+updateTotal : Puzzle -> Int -> Puzzle
+updateTotal puzzle newTotal =
+  { puzzle | total = newTotal}
+
 -- Numbers become unavailable if already used in the solution --
 isAvailable : Puzzle -> Token -> Bool
 isAvailable puzzle token =
@@ -125,6 +160,7 @@ isAvailable puzzle token =
       solutionToken /= token || token.token_type /= NumberToken
   in List.all notInSolution puzzle.solution
 
+-- Is a token valid for adding to the solution --
 isValid : Solution -> Token -> Bool
 isValid solution token =
   let
@@ -148,6 +184,23 @@ parCount solution =
           _ -> acc
   in List.foldl parCountToken 0 solution
 
+-- We use a port here to send to JS to eval the cleaned up solution string --
+port check : String -> Cmd msg
+port total : (Int -> msg) -> Sub msg
+
+subscriptions : Puzzle -> Sub Msg
+subscriptions puzzle =
+  total CalcTotal
+
+solutionComplete : Solution -> Bool
+solutionComplete solution =
+  let
+    last_added = List.head solution
+  in
+    case last_added of
+      Nothing -> False
+      Just last_token -> parCount solution == 0 && (last_token.token_type == NumberToken || last_token.token_type == RPar)
+
 type alias Puzzle =
   {
     id: Int,
@@ -155,7 +208,8 @@ type alias Puzzle =
     numbers: List Token,
     target: Int,
     solution: List Token,
-    time: Float
+    time: Float,
+    total: Int
   }
 
 type alias Token =
@@ -165,7 +219,10 @@ type alias Token =
     value: String
   }
 
+type alias Total =
+  { total: Int }
+
 type alias Operator = String
 type alias Solution = List Token
-type Action = AddNumber Token | AddOperator Token | Clear | Del
+type Msg = AddNumber Token | AddOperator Token | Clear | Del | Check | CalcTotal (Int)
 type TokenType = OperatorToken | NumberToken | LPar | RPar

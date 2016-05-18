@@ -88,14 +88,17 @@ form.link, form.button {
   width: 460px;
 }
 
-.number {
+.edit_keys {
+  width: 460px
+}
+
+.token {
   display: block;
   float: left;
   width: 64px;
   height: 64px;
   border: 3px solid #620119;
   border-radius: 10px;
-  background-color: #0087bd;
   font-size: 32px;
   font-family: monospace;
   color: #ffffff;
@@ -105,10 +108,14 @@ form.link, form.button {
   cursor: pointer;
 }
 
-.number.invalid {
+.token.invalid {
   background-color: white;
-  color: black;
+  color: #888888;
   cursor: default;
+}
+
+.number {
+  background-color: #0087bd;
 }
 
 .number.valid.taken {
@@ -120,26 +127,12 @@ form.link, form.button {
 }
 
 .operator {
-  display: block;
-  float: left;
-  width: 64px;
-  height: 64px;
-  border: 3px solid #620119;
-  border-radius: 10px;
   background-color: #e16a19;
-  font-size: 32px;
-  font-family: monospace;
-  color: #ffffff;
-  text-align: center;
-  line-height: 58px;
-  margin: 3px;
-  cursor: pointer;
 }
 
-.operator.invalid {
-  background-color: white;
-  color: black;
-  cursor: default;
+.total {
+  float: right;
+  font-size: 64px;
 }
 
 .target {

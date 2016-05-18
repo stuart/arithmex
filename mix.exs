@@ -38,7 +38,8 @@ defmodule Arithmex.Mixfile do
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
      {:neotoma, "~> 1.7.0"},
-     {:eqc_ex, "~> 1.2.0"},]
+     {:eqc_ex, "~> 1.2.0"},
+     {:comeonin, "~> 2.4"}]
   end
 
   # Aliases are shortcut or tasks specific to the current project.

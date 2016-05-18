@@ -1,11 +1,12 @@
+<div id='elm-player'></div>
 <div>
   <p>
-    Arithmex is a version of the numbers game from the SBS show "Letters and Numbers"
+    Arithmex is a version of the numbers game from the SBS show <i>"Letters and Numbers"</i>
   </p>
 
   <h1>How to Play</h1>
   <p>
-    A puzzle consists of a set of six numbers chosen randomly from
+    A Numbers puzzle consists of a set of six numbers chosen randomly from
     either the 'small' or 'large' numbers and a randomly chosen target
     number between 100 and 999.
   </p>
@@ -32,30 +33,30 @@
   </p>
 
   <p>
-    <button class="btn btn-default">PLAY!</button>
+    <a class="btn btn-default" href="/puzzle">PLAY!</a>
   </p>
 
   <div class="puzzle">
     <h2>Example Game</h2>
     <div class="timer_wrap">
-      <div class="large_small"><%= @puzzle.n_large %> large and <%= 6 - @puzzle.n_large %> small numbers</div>
+      <div class="large_small" title="Game Timer"><%= @puzzle.n_large %> large and <%= 6 - @puzzle.n_large %> small numbers</div>
       <div class="timer"></div>
     </div>
-    <div class="solution"><%= solution_html(@puzzle) %> &equals; <%= @puzzle.target %></div>
-    <div class="number target"><%= @puzzle.target %></div>
-    <ul class="numbers">
+    <div class="solution" title="Solution to puzzle."><%= solution_html(@puzzle) %> &equals; <%= @puzzle.target %></div>
+    <div class="token number target" title="Target number"><%= @puzzle.target %></div>
+    <ul class="numbers" title="Numbers to choose from">
       <%= for number <- @puzzle.numbers do %>
-        <li class="number"><%= number %></li>
+        <li class="token number"><%= number %></li>
       <%= end %>
     </ul>
 
-    <ul class="operators">
-      <li class="operator">&plus;</li>
-      <li class="operator">&minus;</li>
-      <li class="operator">&times;</li>
-      <li class="operator">&divide;</li>
-      <li class="operator">(</li>
-      <li class="operator">)</li>
+    <ul class="operators" title="Operators to use">
+      <li class="token operator">&plus;</li>
+      <li class="token operator">&minus;</li>
+      <li class="token operator">&times;</li>
+      <li class="token operator">&divide;</li>
+      <li class="token operator">(</li>
+      <li class="token operator">)</li>
     </ul>
   </div>
 </div>

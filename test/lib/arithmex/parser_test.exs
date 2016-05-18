@@ -2,6 +2,7 @@ defmodule Arithmex.ParserTest do
   use ExUnit.Case
   use EQC.ExUnit
 
+  @moduletag :proptest
   setup_all do
     Arithmex.Parser.generate_parser
     {:ok, :arithmex} = :compile.file('priv/arithmex.erl')

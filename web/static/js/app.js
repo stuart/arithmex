@@ -19,5 +19,11 @@ import "deps/phoenix_html/web/static/js/phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+var elmDiv = document.getElementById('elm-main');
+var elmApp = Elm.Puzzle.embed(elmDiv);
 
-var elmDiv = document.getElementById('elm-main'), elmApp = Elm.embed(Elm.Puzzle, elmDiv);
+elmApp.ports.check.subscribe(function(solution) {
+    var result = eval(solution);
+    if (result % 1 != 0) { result = 0 };
+    elmApp.ports.total.send(result);
+});

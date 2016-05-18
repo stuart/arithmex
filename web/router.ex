@@ -21,7 +21,7 @@ defmodule Arithmex.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", Arithmex do
-  #   pipe_through :api
-  # end
+  scope "/api", Arithmex do
+    resources "/players", PlayerController, except: [:new, :edit]
+  end
 end
