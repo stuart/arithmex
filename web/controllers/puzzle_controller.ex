@@ -4,7 +4,6 @@ defmodule Arithmex.PuzzleController do
   alias Arithmex.Puzzle
 
   def index(conn, _params) do
-    puzzle = Puzzle.generate
-    render conn, "index.html", %{puzzle: puzzle}
+    render conn, "index.html", %{}
   end
 end

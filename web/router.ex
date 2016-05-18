@@ -23,5 +23,6 @@ defmodule Arithmex.Router do
   # Other scopes may use custom stacks.
   scope "/api", Arithmex do
     resources "/players", PlayerController, except: [:new, :edit]
+    get "/puzzle", Api.PuzzleController, :index
   end
 end

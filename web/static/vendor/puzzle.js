@@ -5072,12 +5072,228 @@ var _elm_lang$core$Dict$diff = F2(
 			t2);
 	});
 
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
 var _elm_lang$core$Platform_Sub$batch = _elm_lang$core$Native_Platform.batch;
 var _elm_lang$core$Platform_Sub$none = _elm_lang$core$Platform_Sub$batch(
 	_elm_lang$core$Native_List.fromArray(
 		[]));
 var _elm_lang$core$Platform_Sub$map = _elm_lang$core$Native_Platform.map;
 var _elm_lang$core$Platform_Sub$Sub = {ctor: 'Sub'};
+
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			return A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Native_Scheduler.spawn(
+					A2(
+						_elm_lang$core$Time$setInterval,
+						_p1,
+						A2(_elm_lang$core$Platform$sendToSelf, router, _p1))),
+				function (id) {
+					return A3(
+						_elm_lang$core$Time$spawnHelp,
+						router,
+						_p0._1,
+						A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+				});
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				_elm_lang$core$Native_List.fromArray(
+					[_p6]),
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				A2(_elm_lang$core$List_ops['::'], _p6, _p4._0),
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			return A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Time$now,
+				function (time) {
+					return A2(
+						_elm_lang$core$Task$andThen,
+						_elm_lang$core$Task$sequence(
+							A2(
+								_elm_lang$core$List$map,
+								function (tagger) {
+									return A2(
+										_elm_lang$core$Platform$sendToApp,
+										router,
+										tagger(time));
+								},
+								_p7._0)),
+						function (_p8) {
+							return _elm_lang$core$Task$succeed(state);
+						});
+				});
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						_elm_lang$core$Native_Scheduler.kill(id),
+						function (_p14) {
+							return _p13._2;
+						})
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: A2(_elm_lang$core$List_ops['::'], interval, _p18._0),
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: _elm_lang$core$Native_List.fromArray(
+					[]),
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			killTask,
+			function (_p20) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict),
+					function (newProcesses) {
+						return _elm_lang$core$Task$succeed(
+							A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+					});
+			});
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
 
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
@@ -7425,7 +7641,365 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
-var _user$project$Puzzle$parCount = function (solution) {
+//import Dict, List, Maybe, Native.Scheduler //
+
+var _evancz$elm_http$Native_Http = function() {
+
+function send(settings, request)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
+		var req = new XMLHttpRequest();
+
+		// start
+		if (settings.onStart.ctor === 'Just')
+		{
+			req.addEventListener('loadStart', function() {
+				var task = settings.onStart._0;
+				_elm_lang$core$Native_Scheduler.rawSpawn(task);
+			});
+		}
+
+		// progress
+		if (settings.onProgress.ctor === 'Just')
+		{
+			req.addEventListener('progress', function(event) {
+				var progress = !event.lengthComputable
+					? _elm_lang$core$Maybe$Nothing
+					: _elm_lang$core$Maybe$Just({
+						loaded: event.loaded,
+						total: event.total
+					});
+				var task = settings.onProgress._0(progress);
+				_elm_lang$core$Native_Scheduler.rawSpawn(task);
+			});
+		}
+
+		// end
+		req.addEventListener('error', function() {
+			return callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'RawNetworkError' }));
+		});
+
+		req.addEventListener('timeout', function() {
+			return callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'RawTimeout' }));
+		});
+
+		req.addEventListener('load', function() {
+			return callback(_elm_lang$core$Native_Scheduler.succeed(toResponse(req)));
+		});
+
+		req.open(request.verb, request.url, true);
+
+		// set all the headers
+		function setHeader(pair) {
+			req.setRequestHeader(pair._0, pair._1);
+		}
+		A2(_elm_lang$core$List$map, setHeader, request.headers);
+
+		// set the timeout
+		req.timeout = settings.timeout;
+
+		// enable this withCredentials thing
+		req.withCredentials = settings.withCredentials;
+
+		// ask for a specific MIME type for the response
+		if (settings.desiredResponseType.ctor === 'Just')
+		{
+			req.overrideMimeType(settings.desiredResponseType._0);
+		}
+
+		// actuall send the request
+		if(request.body.ctor === "BodyFormData")
+		{
+			req.send(request.body.formData)
+		}
+		else
+		{
+			req.send(request.body._0);
+		}
+
+		return function() {
+			req.abort();
+		};
+	});
+}
+
+
+// deal with responses
+
+function toResponse(req)
+{
+	var tag = req.responseType === 'blob' ? 'Blob' : 'Text'
+	var response = tag === 'Blob' ? req.response : req.responseText;
+	return {
+		status: req.status,
+		statusText: req.statusText,
+		headers: parseHeaders(req.getAllResponseHeaders()),
+		url: req.responseURL,
+		value: { ctor: tag, _0: response }
+	};
+}
+
+
+function parseHeaders(rawHeaders)
+{
+	var headers = _elm_lang$core$Dict$empty;
+
+	if (!rawHeaders)
+	{
+		return headers;
+	}
+
+	var headerPairs = rawHeaders.split('\u000d\u000a');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf('\u003a\u0020');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3(_elm_lang$core$Dict$update, key, function(oldValue) {
+				if (oldValue.ctor === 'Just')
+				{
+					return _elm_lang$core$Maybe$Just(value + ', ' + oldValue._0);
+				}
+				return _elm_lang$core$Maybe$Just(value);
+			}, headers);
+		}
+	}
+
+	return headers;
+}
+
+
+function multipart(dataList)
+{
+	var formData = new FormData();
+
+	while (dataList.ctor !== '[]')
+	{
+		var data = dataList._0;
+		if (data.ctor === 'StringData')
+		{
+			formData.append(data._0, data._1);
+		}
+		else
+		{
+			var fileName = data._1.ctor === 'Nothing'
+				? undefined
+				: data._1._0;
+			formData.append(data._0, data._2, fileName);
+		}
+		dataList = dataList._1;
+	}
+
+	return { ctor: 'BodyFormData', formData: formData };
+}
+
+
+function uriEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function uriDecode(string)
+{
+	return decodeURIComponent(string);
+}
+
+return {
+	send: F2(send),
+	multipart: multipart,
+	uriEncode: uriEncode,
+	uriDecode: uriDecode
+};
+
+}();
+
+var _evancz$elm_http$Http$send = _evancz$elm_http$Native_Http.send;
+var _evancz$elm_http$Http$defaultSettings = {timeout: 0, onStart: _elm_lang$core$Maybe$Nothing, onProgress: _elm_lang$core$Maybe$Nothing, desiredResponseType: _elm_lang$core$Maybe$Nothing, withCredentials: false};
+var _evancz$elm_http$Http$multipart = _evancz$elm_http$Native_Http.multipart;
+var _evancz$elm_http$Http$uriDecode = _evancz$elm_http$Native_Http.uriDecode;
+var _evancz$elm_http$Http$uriEncode = _evancz$elm_http$Native_Http.uriEncode;
+var _evancz$elm_http$Http$queryEscape = function (string) {
+	return A2(
+		_elm_lang$core$String$join,
+		'+',
+		A2(
+			_elm_lang$core$String$split,
+			'%20',
+			_evancz$elm_http$Http$uriEncode(string)));
+};
+var _evancz$elm_http$Http$queryPair = function (_p0) {
+	var _p1 = _p0;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_evancz$elm_http$Http$queryEscape(_p1._0),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'=',
+			_evancz$elm_http$Http$queryEscape(_p1._1)));
+};
+var _evancz$elm_http$Http$url = F2(
+	function (baseUrl, args) {
+		var _p2 = args;
+		if (_p2.ctor === '[]') {
+			return baseUrl;
+		} else {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				baseUrl,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'?',
+					A2(
+						_elm_lang$core$String$join,
+						'&',
+						A2(_elm_lang$core$List$map, _evancz$elm_http$Http$queryPair, args))));
+		}
+	});
+var _evancz$elm_http$Http$Request = F4(
+	function (a, b, c, d) {
+		return {verb: a, headers: b, url: c, body: d};
+	});
+var _evancz$elm_http$Http$Settings = F5(
+	function (a, b, c, d, e) {
+		return {timeout: a, onStart: b, onProgress: c, desiredResponseType: d, withCredentials: e};
+	});
+var _evancz$elm_http$Http$Response = F5(
+	function (a, b, c, d, e) {
+		return {status: a, statusText: b, headers: c, url: d, value: e};
+	});
+var _evancz$elm_http$Http$TODO_implement_blob_in_another_library = {ctor: 'TODO_implement_blob_in_another_library'};
+var _evancz$elm_http$Http$TODO_implement_file_in_another_library = {ctor: 'TODO_implement_file_in_another_library'};
+var _evancz$elm_http$Http$BodyBlob = function (a) {
+	return {ctor: 'BodyBlob', _0: a};
+};
+var _evancz$elm_http$Http$BodyFormData = {ctor: 'BodyFormData'};
+var _evancz$elm_http$Http$ArrayBuffer = {ctor: 'ArrayBuffer'};
+var _evancz$elm_http$Http$BodyString = function (a) {
+	return {ctor: 'BodyString', _0: a};
+};
+var _evancz$elm_http$Http$string = _evancz$elm_http$Http$BodyString;
+var _evancz$elm_http$Http$Empty = {ctor: 'Empty'};
+var _evancz$elm_http$Http$empty = _evancz$elm_http$Http$Empty;
+var _evancz$elm_http$Http$FileData = F3(
+	function (a, b, c) {
+		return {ctor: 'FileData', _0: a, _1: b, _2: c};
+	});
+var _evancz$elm_http$Http$BlobData = F3(
+	function (a, b, c) {
+		return {ctor: 'BlobData', _0: a, _1: b, _2: c};
+	});
+var _evancz$elm_http$Http$blobData = _evancz$elm_http$Http$BlobData;
+var _evancz$elm_http$Http$StringData = F2(
+	function (a, b) {
+		return {ctor: 'StringData', _0: a, _1: b};
+	});
+var _evancz$elm_http$Http$stringData = _evancz$elm_http$Http$StringData;
+var _evancz$elm_http$Http$Blob = function (a) {
+	return {ctor: 'Blob', _0: a};
+};
+var _evancz$elm_http$Http$Text = function (a) {
+	return {ctor: 'Text', _0: a};
+};
+var _evancz$elm_http$Http$RawNetworkError = {ctor: 'RawNetworkError'};
+var _evancz$elm_http$Http$RawTimeout = {ctor: 'RawTimeout'};
+var _evancz$elm_http$Http$BadResponse = F2(
+	function (a, b) {
+		return {ctor: 'BadResponse', _0: a, _1: b};
+	});
+var _evancz$elm_http$Http$UnexpectedPayload = function (a) {
+	return {ctor: 'UnexpectedPayload', _0: a};
+};
+var _evancz$elm_http$Http$handleResponse = F2(
+	function (handle, response) {
+		if ((_elm_lang$core$Native_Utils.cmp(200, response.status) < 1) && (_elm_lang$core$Native_Utils.cmp(response.status, 300) < 0)) {
+			var _p3 = response.value;
+			if (_p3.ctor === 'Text') {
+				return handle(_p3._0);
+			} else {
+				return _elm_lang$core$Task$fail(
+					_evancz$elm_http$Http$UnexpectedPayload('Response body is a blob, expecting a string.'));
+			}
+		} else {
+			return _elm_lang$core$Task$fail(
+				A2(_evancz$elm_http$Http$BadResponse, response.status, response.statusText));
+		}
+	});
+var _evancz$elm_http$Http$NetworkError = {ctor: 'NetworkError'};
+var _evancz$elm_http$Http$Timeout = {ctor: 'Timeout'};
+var _evancz$elm_http$Http$promoteError = function (rawError) {
+	var _p4 = rawError;
+	if (_p4.ctor === 'RawTimeout') {
+		return _evancz$elm_http$Http$Timeout;
+	} else {
+		return _evancz$elm_http$Http$NetworkError;
+	}
+};
+var _evancz$elm_http$Http$getString = function (url) {
+	var request = {
+		verb: 'GET',
+		headers: _elm_lang$core$Native_List.fromArray(
+			[]),
+		url: url,
+		body: _evancz$elm_http$Http$empty
+	};
+	return A2(
+		_elm_lang$core$Task$andThen,
+		A2(
+			_elm_lang$core$Task$mapError,
+			_evancz$elm_http$Http$promoteError,
+			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request)),
+		_evancz$elm_http$Http$handleResponse(_elm_lang$core$Task$succeed));
+};
+var _evancz$elm_http$Http$fromJson = F2(
+	function (decoder, response) {
+		var decode = function (str) {
+			var _p5 = A2(_elm_lang$core$Json_Decode$decodeString, decoder, str);
+			if (_p5.ctor === 'Ok') {
+				return _elm_lang$core$Task$succeed(_p5._0);
+			} else {
+				return _elm_lang$core$Task$fail(
+					_evancz$elm_http$Http$UnexpectedPayload(_p5._0));
+			}
+		};
+		return A2(
+			_elm_lang$core$Task$andThen,
+			A2(_elm_lang$core$Task$mapError, _evancz$elm_http$Http$promoteError, response),
+			_evancz$elm_http$Http$handleResponse(decode));
+	});
+var _evancz$elm_http$Http$get = F2(
+	function (decoder, url) {
+		var request = {
+			verb: 'GET',
+			headers: _elm_lang$core$Native_List.fromArray(
+				[]),
+			url: url,
+			body: _evancz$elm_http$Http$empty
+		};
+		return A2(
+			_evancz$elm_http$Http$fromJson,
+			decoder,
+			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request));
+	});
+var _evancz$elm_http$Http$post = F3(
+	function (decoder, url, body) {
+		var request = {
+			verb: 'POST',
+			headers: _elm_lang$core$Native_List.fromArray(
+				[]),
+			url: url,
+			body: body
+		};
+		return A2(
+			_evancz$elm_http$Http$fromJson,
+			decoder,
+			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request));
+	});
+
+var _user$project$Solution$parCount = function (solution) {
 	var parCountToken = F2(
 		function (token, acc) {
 			var _p0 = token.token_type;
@@ -7440,31 +8014,7 @@ var _user$project$Puzzle$parCount = function (solution) {
 		});
 	return A3(_elm_lang$core$List$foldl, parCountToken, 0, solution);
 };
-var _user$project$Puzzle$updateTotal = F2(
-	function (puzzle, newTotal) {
-		return _elm_lang$core$Native_Utils.update(
-			puzzle,
-			{total: newTotal});
-	});
-var _user$project$Puzzle$deleteToken = function (puzzle) {
-	var _p1 = _elm_lang$core$List$tail(puzzle.solution);
-	if (_p1.ctor === 'Just') {
-		return _elm_lang$core$Native_Utils.update(
-			puzzle,
-			{solution: _p1._0});
-	} else {
-		return puzzle;
-	}
-};
-var _user$project$Puzzle$clearSolution = function (puzzle) {
-	return _elm_lang$core$Native_Utils.update(
-		puzzle,
-		{
-			solution: _elm_lang$core$Native_List.fromArray(
-				[])
-		});
-};
-var _user$project$Puzzle$solutionValue = function (solution) {
+var _user$project$Solution$solutionValue = function (solution) {
 	return A2(
 		_elm_lang$core$List$map,
 		function (_) {
@@ -7472,15 +8022,145 @@ var _user$project$Puzzle$solutionValue = function (solution) {
 		},
 		solution);
 };
-var _user$project$Puzzle$solutionString = function (solution) {
+var _user$project$Solution$solutionString = function (solution) {
 	return _elm_lang$core$String$concat(
 		_elm_lang$core$List$reverse(
-			_user$project$Puzzle$solutionValue(solution)));
+			_user$project$Solution$solutionValue(solution)));
 };
+var _user$project$Solution$deleteToken = function (solution) {
+	var _p1 = _elm_lang$core$List$tail(solution);
+	if (_p1.ctor === 'Just') {
+		return _p1._0;
+	} else {
+		return solution;
+	}
+};
+var _user$project$Solution$clear = _elm_lang$core$Native_List.fromArray(
+	[]);
+var _user$project$Solution$Token = F3(
+	function (a, b, c) {
+		return {id: a, token_type: b, value: c};
+	});
+var _user$project$Solution$RPar = {ctor: 'RPar'};
+var _user$project$Solution$LPar = {ctor: 'LPar'};
+var _user$project$Solution$NumberToken = {ctor: 'NumberToken'};
+var _user$project$Solution$isAvailable = F2(
+	function (solution, token) {
+		var notInSolution = function (solutionToken) {
+			return (!_elm_lang$core$Native_Utils.eq(solutionToken, token)) || (!_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken));
+		};
+		return A2(_elm_lang$core$List$all, notInSolution, solution);
+	});
+var _user$project$Solution$solutionComplete = function (solution) {
+	var last_added = _elm_lang$core$List$head(solution);
+	var _p2 = last_added;
+	if (_p2.ctor === 'Nothing') {
+		return false;
+	} else {
+		var _p3 = _p2._0;
+		return _elm_lang$core$Native_Utils.eq(
+			_user$project$Solution$parCount(solution),
+			0) && (_elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Solution$NumberToken) || _elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Solution$RPar));
+	}
+};
+var _user$project$Solution$evaluableSolutionString = function (solution) {
+	var _p4 = _user$project$Solution$solutionComplete(solution);
+	if (_p4 === true) {
+		var makeEval = F2(
+			function (token, acc) {
+				var _p5 = token.value;
+				switch (_p5) {
+					case '×':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '*');
+					case '÷':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '/');
+					case '−':
+						return A2(_elm_lang$core$Basics_ops['++'], acc, '-');
+					default:
+						return A2(_elm_lang$core$Basics_ops['++'], acc, _p5);
+				}
+			});
+		return A3(_elm_lang$core$List$foldr, makeEval, '', solution);
+	} else {
+		return '';
+	}
+};
+var _user$project$Solution$OperatorToken = {ctor: 'OperatorToken'};
+var _user$project$Solution$isValid = F2(
+	function (solution, token) {
+		var last_added = _elm_lang$core$List$head(solution);
+		var _p6 = last_added;
+		if (_p6.ctor === 'Nothing') {
+			return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$LPar);
+		} else {
+			var _p7 = _p6._0.token_type;
+			switch (_p7.ctor) {
+				case 'NumberToken':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$OperatorToken) || (_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$RPar) && (_elm_lang$core$Native_Utils.cmp(
+						_user$project$Solution$parCount(solution),
+						0) > 0));
+				case 'OperatorToken':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$LPar);
+				case 'LPar':
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken);
+				default:
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$OperatorToken);
+			}
+		}
+	});
+var _user$project$Solution$addToken = F2(
+	function (solution, token) {
+		return (_elm_lang$core$Native_Utils.eq(
+			A2(_user$project$Solution$isAvailable, solution, token),
+			true) && A2(_user$project$Solution$isValid, solution, token)) ? A2(_elm_lang$core$List_ops['::'], token, solution) : solution;
+	});
+
+var _user$project$Puzzle$toToken = function (num) {
+	return {
+		id: 2,
+		value: _elm_lang$core$Basics$toString(num),
+		token_type: _user$project$Solution$NumberToken
+	};
+};
+var _user$project$Puzzle$updateTotal = F2(
+	function (puzzle, newTotal) {
+		return _elm_lang$core$Native_Utils.update(
+			puzzle,
+			{total: newTotal});
+	});
+var _user$project$Puzzle$deleteToken = function (puzzle) {
+	return _elm_lang$core$Native_Utils.update(
+		puzzle,
+		{
+			solution: _user$project$Solution$deleteToken(puzzle.solution)
+		});
+};
+var _user$project$Puzzle$clearSolution = function (puzzle) {
+	return _elm_lang$core$Native_Utils.update(
+		puzzle,
+		{solution: _user$project$Solution$clear});
+};
+var _user$project$Puzzle$addTokenToSolution = F2(
+	function (puzzle, token) {
+		return _elm_lang$core$Native_Utils.update(
+			puzzle,
+			{
+				solution: A2(_user$project$Solution$addToken, puzzle.solution, token)
+			});
+	});
 var _user$project$Puzzle$solutionField = function (puzzle) {
 	return _elm_lang$html$Html$text(
-		_user$project$Puzzle$solutionString(puzzle.solution));
+		_user$project$Solution$solutionString(puzzle.solution));
 };
+var _user$project$Puzzle$operators = _elm_lang$core$Native_List.fromArray(
+	[
+		{id: 1, value: '+', token_type: _user$project$Solution$OperatorToken},
+		{id: 2, value: '−', token_type: _user$project$Solution$OperatorToken},
+		{id: 3, value: '×', token_type: _user$project$Solution$OperatorToken},
+		{id: 4, value: '÷', token_type: _user$project$Solution$OperatorToken},
+		{id: 5, value: '(', token_type: _user$project$Solution$LPar},
+		{id: 6, value: ')', token_type: _user$project$Solution$RPar}
+	]);
 var _user$project$Puzzle$puzzleDesc = function (puzzle) {
 	return _elm_lang$html$Html$text(
 		_elm_lang$core$String$concat(
@@ -7506,18 +8186,114 @@ var _user$project$Puzzle$check = _elm_lang$core$Native_Platform.outgoingPort(
 	function (v) {
 		return v;
 	});
+var _user$project$Puzzle$update = F2(
+	function (msg, puzzle) {
+		var _p0 = msg;
+		switch (_p0.ctor) {
+			case 'AddNumber':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p0._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'AddOperator':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p0._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Clear':
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Puzzle$clearSolution(puzzle),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Del':
+				return {
+					ctor: '_Tuple2',
+					_0: _user$project$Puzzle$deleteToken(puzzle),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Check':
+				return {
+					ctor: '_Tuple2',
+					_0: puzzle,
+					_1: _user$project$Puzzle$check(
+						_user$project$Solution$evaluableSolutionString(puzzle.solution))
+				};
+			case 'CalcTotal':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Puzzle$updateTotal, puzzle, _p0._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'FetchFail':
+				return {ctor: '_Tuple2', _0: puzzle, _1: _elm_lang$core$Platform_Cmd$none};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_elm_lang$core$Debug$log, 'puzzle:', _p0._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
 var _user$project$Puzzle$total = _elm_lang$core$Native_Platform.incomingPort('total', _elm_lang$core$Json_Decode$int);
 var _user$project$Puzzle$Puzzle = F7(
 	function (a, b, c, d, e, f, g) {
 		return {id: a, n_large: b, numbers: c, target: d, solution: e, time: f, total: g};
 	});
-var _user$project$Puzzle$Token = F3(
-	function (a, b, c) {
-		return {id: a, token_type: b, value: c};
-	});
+var _user$project$Puzzle$puzzleDecoder = A8(
+	_elm_lang$core$Json_Decode$object7,
+	_user$project$Puzzle$Puzzle,
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'n_large', _elm_lang$core$Json_Decode$int),
+	A2(
+		_elm_lang$core$Json_Decode_ops[':='],
+		'numbers',
+		_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int)),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'target', _elm_lang$core$Json_Decode$int),
+	A2(
+		_elm_lang$core$Json_Decode_ops[':='],
+		'solution',
+		_elm_lang$core$Json_Decode$succeed(
+			_elm_lang$core$Native_List.fromArray(
+				[]))),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'time', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'total', _elm_lang$core$Json_Decode$int));
 var _user$project$Puzzle$Total = function (a) {
 	return {total: a};
 };
+var _user$project$Puzzle$FetchSucceed = function (a) {
+	return {ctor: 'FetchSucceed', _0: a};
+};
+var _user$project$Puzzle$getSucceed = function (result) {
+	return _user$project$Puzzle$FetchSucceed(
+		A2(_elm_lang$core$Debug$log, 'succeed', result));
+};
+var _user$project$Puzzle$FetchFail = {ctor: 'FetchFail'};
+var _user$project$Puzzle$getFail = function (result) {
+	var l = A2(_elm_lang$core$Debug$log, 'failed', result);
+	return _user$project$Puzzle$FetchFail;
+};
+var _user$project$Puzzle$get = A3(
+	_elm_lang$core$Task$perform,
+	_user$project$Puzzle$getFail,
+	_user$project$Puzzle$getSucceed,
+	A2(_evancz$elm_http$Http$get, _user$project$Puzzle$puzzleDecoder, 'http://localhost:4000/api/puzzle'));
+var _user$project$Puzzle$init = function () {
+	var puzzle = {
+		id: 0,
+		n_large: 0,
+		numbers: _elm_lang$core$Native_List.fromArray(
+			[]),
+		solution: _elm_lang$core$Native_List.fromArray(
+			[]),
+		target: 0,
+		time: 30,
+		total: 0
+	};
+	return {ctor: '_Tuple2', _0: puzzle, _1: _user$project$Puzzle$get};
+}();
 var _user$project$Puzzle$CalcTotal = function (a) {
 	return {ctor: 'CalcTotal', _0: a};
 };
@@ -7572,108 +8348,11 @@ var _user$project$Puzzle$AddOperator = function (a) {
 var _user$project$Puzzle$AddNumber = function (a) {
 	return {ctor: 'AddNumber', _0: a};
 };
-var _user$project$Puzzle$RPar = {ctor: 'RPar'};
-var _user$project$Puzzle$LPar = {ctor: 'LPar'};
-var _user$project$Puzzle$NumberToken = {ctor: 'NumberToken'};
-var _user$project$Puzzle$init = function () {
-	var puzzle = {
-		id: 123456,
-		n_large: 2,
-		numbers: _elm_lang$core$Native_List.fromArray(
-			[
-				{id: 1, value: '2', token_type: _user$project$Puzzle$NumberToken},
-				{id: 2, value: '4', token_type: _user$project$Puzzle$NumberToken},
-				{id: 3, value: '7', token_type: _user$project$Puzzle$NumberToken},
-				{id: 4, value: '2', token_type: _user$project$Puzzle$NumberToken},
-				{id: 5, value: '25', token_type: _user$project$Puzzle$NumberToken},
-				{id: 6, value: '100', token_type: _user$project$Puzzle$NumberToken}
-			]),
-		target: 532,
-		solution: _elm_lang$core$Native_List.fromArray(
-			[]),
-		time: 0,
-		total: 0
-	};
-	return {ctor: '_Tuple2', _0: puzzle, _1: _elm_lang$core$Platform_Cmd$none};
-}();
-var _user$project$Puzzle$isAvailable = F2(
-	function (puzzle, token) {
-		var notInSolution = function (solutionToken) {
-			return (!_elm_lang$core$Native_Utils.eq(solutionToken, token)) || (!_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken));
-		};
-		return A2(_elm_lang$core$List$all, notInSolution, puzzle.solution);
-	});
-var _user$project$Puzzle$solutionComplete = function (solution) {
-	var last_added = _elm_lang$core$List$head(solution);
-	var _p2 = last_added;
-	if (_p2.ctor === 'Nothing') {
-		return false;
-	} else {
-		var _p3 = _p2._0;
-		return _elm_lang$core$Native_Utils.eq(
-			_user$project$Puzzle$parCount(solution),
-			0) && (_elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(_p3.token_type, _user$project$Puzzle$RPar));
-	}
-};
-var _user$project$Puzzle$evaluableSolutionString = function (solution) {
-	var _p4 = _user$project$Puzzle$solutionComplete(solution);
-	if (_p4 === true) {
-		var makeEval = F2(
-			function (token, acc) {
-				var _p5 = token.value;
-				switch (_p5) {
-					case '×':
-						return A2(_elm_lang$core$Basics_ops['++'], acc, '*');
-					case '÷':
-						return A2(_elm_lang$core$Basics_ops['++'], acc, '/');
-					case '−':
-						return A2(_elm_lang$core$Basics_ops['++'], acc, '-');
-					default:
-						return A2(_elm_lang$core$Basics_ops['++'], acc, _p5);
-				}
-			});
-		return A3(_elm_lang$core$List$foldr, makeEval, '', solution);
-	} else {
-		return '';
-	}
-};
-var _user$project$Puzzle$OperatorToken = {ctor: 'OperatorToken'};
-var _user$project$Puzzle$operators = _elm_lang$core$Native_List.fromArray(
-	[
-		{id: 1, value: '+', token_type: _user$project$Puzzle$OperatorToken},
-		{id: 2, value: '−', token_type: _user$project$Puzzle$OperatorToken},
-		{id: 3, value: '×', token_type: _user$project$Puzzle$OperatorToken},
-		{id: 4, value: '÷', token_type: _user$project$Puzzle$OperatorToken},
-		{id: 5, value: '(', token_type: _user$project$Puzzle$LPar},
-		{id: 6, value: ')', token_type: _user$project$Puzzle$RPar}
-	]);
-var _user$project$Puzzle$isValid = F2(
-	function (solution, token) {
-		var last_added = _elm_lang$core$List$head(solution);
-		var _p6 = last_added;
-		if (_p6.ctor === 'Nothing') {
-			return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$LPar);
-		} else {
-			var _p7 = _p6._0.token_type;
-			switch (_p7.ctor) {
-				case 'NumberToken':
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$OperatorToken) || (_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$RPar) && (_elm_lang$core$Native_Utils.cmp(
-						_user$project$Puzzle$parCount(solution),
-						0) > 0));
-				case 'OperatorToken':
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$LPar);
-				case 'LPar':
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken);
-				default:
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$OperatorToken);
-			}
-		}
-	});
 var _user$project$Puzzle$tokenItem = F2(
 	function (puzzle, token) {
-		var typeClass = _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Puzzle$NumberToken) ? 'number ' : 'operator ';
-		var validClass = A2(_user$project$Puzzle$isValid, puzzle.solution, token) ? 'valid ' : 'invalid ';
-		var takenClass = A2(_user$project$Puzzle$isAvailable, puzzle, token) ? 'available ' : 'taken ';
+		var typeClass = _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken) ? 'number ' : 'operator ';
+		var validClass = A2(_user$project$Solution$isValid, puzzle.solution, token) ? 'valid ' : 'invalid ';
+		var takenClass = A2(_user$project$Solution$isAvailable, puzzle.solution, token) ? 'available ' : 'taken ';
 		return A2(
 			_elm_lang$html$Html$li,
 			_elm_lang$core$Native_List.fromArray(
@@ -7693,6 +8372,13 @@ var _user$project$Puzzle$tokenItem = F2(
 				[
 					_elm_lang$html$Html$text(token.value)
 				]));
+	});
+var _user$project$Puzzle$numberItem = F2(
+	function (puzzle, num) {
+		return A2(
+			_user$project$Puzzle$tokenItem,
+			puzzle,
+			_user$project$Puzzle$toToken(num));
 	});
 var _user$project$Puzzle$view = function (puzzle) {
 	return A2(
@@ -7786,7 +8472,7 @@ var _user$project$Puzzle$view = function (puzzle) {
 					]),
 				A2(
 					_elm_lang$core$List$map,
-					_user$project$Puzzle$tokenItem(puzzle),
+					_user$project$Puzzle$numberItem(puzzle),
 					puzzle.numbers)),
 				A2(
 				_elm_lang$html$Html$ul,
@@ -7814,59 +8500,6 @@ var _user$project$Puzzle$view = function (puzzle) {
 					]))
 			]));
 };
-var _user$project$Puzzle$addTokenToSolution = F2(
-	function (puzzle, token) {
-		return (_elm_lang$core$Native_Utils.eq(
-			A2(_user$project$Puzzle$isAvailable, puzzle, token),
-			true) && A2(_user$project$Puzzle$isValid, puzzle.solution, token)) ? _elm_lang$core$Native_Utils.update(
-			puzzle,
-			{
-				solution: A2(_elm_lang$core$List_ops['::'], token, puzzle.solution)
-			}) : puzzle;
-	});
-var _user$project$Puzzle$update = F2(
-	function (msg, puzzle) {
-		var _p8 = msg;
-		switch (_p8.ctor) {
-			case 'AddNumber':
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p8._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'AddOperator':
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p8._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Clear':
-				return {
-					ctor: '_Tuple2',
-					_0: _user$project$Puzzle$clearSolution(puzzle),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Del':
-				return {
-					ctor: '_Tuple2',
-					_0: _user$project$Puzzle$deleteToken(puzzle),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Check':
-				return {
-					ctor: '_Tuple2',
-					_0: puzzle,
-					_1: _user$project$Puzzle$check(
-						_user$project$Puzzle$evaluableSolutionString(puzzle.solution))
-				};
-			default:
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$updateTotal, puzzle, _p8._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
-	});
 var _user$project$Puzzle$main = {
 	main: _elm_lang$html$Html_App$program(
 		{init: _user$project$Puzzle$init, update: _user$project$Puzzle$update, view: _user$project$Puzzle$view, subscriptions: _user$project$Puzzle$subscriptions})

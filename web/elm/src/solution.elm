@@ -1,23 +1,41 @@
-module Puzzle.Solution exporting (Solution Token addToken solutionString evaluableSolutionString)
-  type alias Solution = List Token
-  type TokenType = OperatorToken | NumberToken | LPar | RPar
-  type alias Token =
-    {
-      id: Int,
-      token_type: TokenType,
-      value: String
-    }
+module Solution exposing (..)
+
+import String
+
+type alias Solution = List Token
+
+type TokenType = OperatorToken | NumberToken | LPar | RPar
+
+type alias Token =
+  {
+    id: Int,
+    token_type: TokenType,
+    value: String
+  }
 
 addToken : Solution -> Token -> Solution
 addToken solution token =
-  if notInSolution solution token == True && isValid solution token then
+  if isAvailable solution token == True && isValid solution token then
     token :: solution
   else
     solution
 
+clear : Solution
+clear = [ ]
+
+deleteToken : Solution -> Solution
+deleteToken solution =
+  case List.tail solution of
+    Just t -> t
+    Nothing -> solution
+
 solutionString : Solution -> String
 solutionString solution =
   String.concat(List.reverse (solutionValue solution))
+
+solutionValue : Solution -> List String
+solutionValue solution =
+  List.map .value solution
 
 -- Convert a solution to an evaluable version --
 evaluableSolutionString : Solution -> String
@@ -57,7 +75,7 @@ parCount solution =
           _ -> acc
   in List.foldl parCountToken 0 solution
 
-notInSolution solution, token =
+isAvailable solution token =
   let
     notInSolution solutionToken =
       solutionToken /= token || token.token_type /= NumberToken
