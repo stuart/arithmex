@@ -8117,8 +8117,8 @@ var _user$project$Solution$addToken = F2(
 
 var _user$project$Puzzle$toToken = function (num) {
 	return {
-		id: 2,
-		value: _elm_lang$core$Basics$toString(num),
+		id: num.id,
+		value: _elm_lang$core$Basics$toString(num.number),
 		token_type: _user$project$Solution$NumberToken
 	};
 };
@@ -8242,6 +8242,15 @@ var _user$project$Puzzle$Puzzle = F7(
 	function (a, b, c, d, e, f, g) {
 		return {id: a, n_large: b, numbers: c, target: d, solution: e, time: f, total: g};
 	});
+var _user$project$Puzzle$Number = F2(
+	function (a, b) {
+		return {id: a, number: b};
+	});
+var _user$project$Puzzle$numberDecoder = A3(
+	_elm_lang$core$Json_Decode$object2,
+	_user$project$Puzzle$Number,
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'number', _elm_lang$core$Json_Decode$int));
 var _user$project$Puzzle$puzzleDecoder = A8(
 	_elm_lang$core$Json_Decode$object7,
 	_user$project$Puzzle$Puzzle,
@@ -8250,7 +8259,7 @@ var _user$project$Puzzle$puzzleDecoder = A8(
 	A2(
 		_elm_lang$core$Json_Decode_ops[':='],
 		'numbers',
-		_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int)),
+		_elm_lang$core$Json_Decode$list(_user$project$Puzzle$numberDecoder)),
 	A2(_elm_lang$core$Json_Decode_ops[':='], 'target', _elm_lang$core$Json_Decode$int),
 	A2(
 		_elm_lang$core$Json_Decode_ops[':='],
@@ -8289,7 +8298,7 @@ var _user$project$Puzzle$init = function () {
 		solution: _elm_lang$core$Native_List.fromArray(
 			[]),
 		target: 0,
-		time: 30,
+		time: 0,
 		total: 0
 	};
 	return {ctor: '_Tuple2', _0: puzzle, _1: _user$project$Puzzle$get};

@@ -22,7 +22,7 @@ init : (Puzzle, Cmd Msg)
 init =
   let
     puzzle =
-       {id = 0, n_large = 0, numbers = [], solution = [], target = 0, time = 30, total = 0}
+       {id = 0, n_large = 0, numbers = [], solution = [], target = 0, time = 0, total = 0}
     in
     ( puzzle, get)
 
@@ -40,7 +40,7 @@ getSucceed result =
 
 puzzleDecoder : Json.Decoder { id : Int
         , n_large : Int
-        , numbers : List Int
+        , numbers : List Number
         , solution : List Token
         , target : Int
         , time : Int
@@ -51,11 +51,16 @@ puzzleDecoder =
   Json.object7 Puzzle
       ("id" := Json.int)
       ("n_large" := Json.int)
-      ("numbers" := Json.list Json.int)
+      ("numbers" := Json.list numberDecoder)
       ("target" := Json.int)
       ("solution" := Json.succeed [ ])
       ("time" := Json.int)
       ("total" := Json.int)
+
+numberDecoder =
+  Json.object2 Number
+    ("id" := Json.int)
+    ("number" := Json.int)
 
 --- VIEW ---
 view : Puzzle -> Html.Html Msg
@@ -85,7 +90,7 @@ puzzleDesc : Puzzle -> Html.Html Msg
 puzzleDesc puzzle =
   text( String.concat( [toString(puzzle.n_large), " large and ", toString(6 - puzzle.n_large), " small"]))
 
-numberItem : Puzzle -> Int -> Html.Html Msg
+numberItem : Puzzle -> Number -> Html.Html Msg
 numberItem puzzle num =
   tokenItem puzzle (toToken num)
 
@@ -160,21 +165,24 @@ subscriptions : Puzzle -> Sub Msg
 subscriptions puzzle =
   total CalcTotal
 
-toToken : Int -> Solution.Token
+toToken : Number -> Solution.Token
 toToken num =
-  { id = 2, value = toString(num), token_type = Solution.NumberToken }
+  { id = num.id, value = toString(num.number), token_type = Solution.NumberToken }
 
 -- Typedefs --
 type alias Puzzle =
   {
     id: Int,
     n_large: Int,
-    numbers: List Int,
+    numbers: List Number,
     target: Int,
     solution: List Token,
     time: Int,
     total: Int
   }
+
+type alias Number =
+  {id: Int, number: Int}
 
 type alias Total =
   { total: Int }
