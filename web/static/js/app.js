@@ -24,6 +24,6 @@ var elmApp = Elm.Puzzle.embed(elmDiv);
 
 elmApp.ports.check.subscribe(function(solution) {
     var result = eval(solution);
-    if (result % 1 != 0) { result = 0 };
+    if (result % 1 != 0) { result = null };
     elmApp.ports.total.send(result);
 });

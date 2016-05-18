@@ -78,8 +78,7 @@ view puzzle =
     ul[ id "numbers", class "numbers" ] ( List.map (numberItem puzzle) puzzle.numbers ),
     ul[ id "operators", class "operators" ] ( List.map (tokenItem puzzle) operators ),
     ul[ id "edit", class "edit_keys"] [ clearKey puzzle,
-                                        delKey puzzle,
-                                        checkKey puzzle ]
+                                        delKey puzzle ]
   ]
 
 puzzleTitle : Puzzle -> Html.Html Msg
@@ -104,16 +103,13 @@ tokenItem puzzle token =
     typeClass =
       if token.token_type == NumberToken then "number " else "operator "
   in
-    li [ class ("token " ++ typeClass ++ takenClass ++ validClass), onClick (AddNumber token) ] [ text token.value ]
+    li [ class ("token " ++ typeClass ++ takenClass ++ validClass), onClick (AddToken token) ] [ text token.value ]
 
 clearKey puzzle =
   li [ class ("token operator"), onClick (Clear)] [ text "C" ]
 
 delKey puzzle =
   li [ class ("token operator"), onClick (Del)] [ text "←"]
-
-checkKey puzzle =
-  li [ class ("token operator"), onClick (Check)] [ text "="]
 
 operators : List Token
 operators = [
@@ -131,8 +127,7 @@ solutionField puzzle =
 update : Msg -> Puzzle -> (Puzzle, Cmd Msg)
 update msg puzzle =
   case msg of
-    AddNumber number -> (addTokenToSolution puzzle number, Cmd.none)
-    AddOperator operator -> (addTokenToSolution puzzle operator, Cmd.none)
+    AddToken token -> update Check (addTokenToSolution puzzle token)
     Clear -> (clearSolution puzzle, Cmd.none)
     Del -> (deleteToken puzzle, Cmd.none)
     Check -> (puzzle, check(evaluableSolutionString puzzle.solution))
@@ -152,14 +147,16 @@ deleteToken : Puzzle -> Puzzle
 deleteToken puzzle =
   { puzzle | solution = Solution.deleteToken puzzle.solution }
 
-updateTotal : Puzzle -> Int -> Puzzle
+updateTotal : Puzzle -> Maybe Int -> Puzzle
 updateTotal puzzle newTotal =
-  { puzzle | total = newTotal}
+  case newTotal of
+    Nothing -> puzzle
+    Just int -> { puzzle | total = int }
 
 -- Subscriptions --
 -- We use a port here to send to JS to eval the cleaned up solution string --
 port check : String -> Cmd msg
-port total : (Int -> msg) -> Sub msg
+port total : (Maybe Int -> msg) -> Sub msg
 
 subscriptions : Puzzle -> Sub Msg
 subscriptions puzzle =
@@ -188,4 +185,4 @@ type alias Total =
   { total: Int }
 
 type alias Operator = String
-type Msg = AddNumber Token | AddOperator Token | Clear | Del | Check | CalcTotal (Int) | FetchFail | FetchSucceed (Puzzle)
+type Msg = AddToken Token | Clear | Del | Check | CalcTotal (Maybe Int) | FetchFail | FetchSucceed (Puzzle)

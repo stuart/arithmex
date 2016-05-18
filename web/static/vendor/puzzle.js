@@ -8124,9 +8124,14 @@ var _user$project$Puzzle$toToken = function (num) {
 };
 var _user$project$Puzzle$updateTotal = F2(
 	function (puzzle, newTotal) {
-		return _elm_lang$core$Native_Utils.update(
-			puzzle,
-			{total: newTotal});
+		var _p0 = newTotal;
+		if (_p0.ctor === 'Nothing') {
+			return puzzle;
+		} else {
+			return _elm_lang$core$Native_Utils.update(
+				puzzle,
+				{total: _p0._0});
+		}
 	});
 var _user$project$Puzzle$deleteToken = function (puzzle) {
 	return _elm_lang$core$Native_Utils.update(
@@ -8186,58 +8191,14 @@ var _user$project$Puzzle$check = _elm_lang$core$Native_Platform.outgoingPort(
 	function (v) {
 		return v;
 	});
-var _user$project$Puzzle$update = F2(
-	function (msg, puzzle) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
-			case 'AddNumber':
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p0._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'AddOperator':
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p0._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Clear':
-				return {
-					ctor: '_Tuple2',
-					_0: _user$project$Puzzle$clearSolution(puzzle),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Del':
-				return {
-					ctor: '_Tuple2',
-					_0: _user$project$Puzzle$deleteToken(puzzle),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Check':
-				return {
-					ctor: '_Tuple2',
-					_0: puzzle,
-					_1: _user$project$Puzzle$check(
-						_user$project$Solution$evaluableSolutionString(puzzle.solution))
-				};
-			case 'CalcTotal':
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Puzzle$updateTotal, puzzle, _p0._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'FetchFail':
-				return {ctor: '_Tuple2', _0: puzzle, _1: _elm_lang$core$Platform_Cmd$none};
-			default:
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_elm_lang$core$Debug$log, 'puzzle:', _p0._0),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
-	});
-var _user$project$Puzzle$total = _elm_lang$core$Native_Platform.incomingPort('total', _elm_lang$core$Json_Decode$int);
+var _user$project$Puzzle$total = _elm_lang$core$Native_Platform.incomingPort(
+	'total',
+	_elm_lang$core$Json_Decode$oneOf(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$int)
+			])));
 var _user$project$Puzzle$Puzzle = F7(
 	function (a, b, c, d, e, f, g) {
 		return {id: a, n_large: b, numbers: c, target: d, solution: e, time: f, total: g};
@@ -8310,19 +8271,54 @@ var _user$project$Puzzle$subscriptions = function (puzzle) {
 	return _user$project$Puzzle$total(_user$project$Puzzle$CalcTotal);
 };
 var _user$project$Puzzle$Check = {ctor: 'Check'};
-var _user$project$Puzzle$checkKey = function (puzzle) {
-	return A2(
-		_elm_lang$html$Html$li,
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html_Attributes$class('token operator'),
-				_elm_lang$html$Html_Events$onClick(_user$project$Puzzle$Check)
-			]),
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html$text('=')
-			]));
-};
+var _user$project$Puzzle$update = F2(
+	function (msg, puzzle) {
+		update:
+		while (true) {
+			var _p1 = msg;
+			switch (_p1.ctor) {
+				case 'AddToken':
+					var _v2 = _user$project$Puzzle$Check,
+						_v3 = A2(_user$project$Puzzle$addTokenToSolution, puzzle, _p1._0);
+					msg = _v2;
+					puzzle = _v3;
+					continue update;
+				case 'Clear':
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Puzzle$clearSolution(puzzle),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Del':
+					return {
+						ctor: '_Tuple2',
+						_0: _user$project$Puzzle$deleteToken(puzzle),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Check':
+					return {
+						ctor: '_Tuple2',
+						_0: puzzle,
+						_1: _user$project$Puzzle$check(
+							_user$project$Solution$evaluableSolutionString(puzzle.solution))
+					};
+				case 'CalcTotal':
+					return {
+						ctor: '_Tuple2',
+						_0: A2(_user$project$Puzzle$updateTotal, puzzle, _p1._0),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'FetchFail':
+					return {ctor: '_Tuple2', _0: puzzle, _1: _elm_lang$core$Platform_Cmd$none};
+				default:
+					return {
+						ctor: '_Tuple2',
+						_0: A2(_elm_lang$core$Debug$log, 'puzzle:', _p1._0),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+			}
+		}
+	});
 var _user$project$Puzzle$Del = {ctor: 'Del'};
 var _user$project$Puzzle$delKey = function (puzzle) {
 	return A2(
@@ -8351,11 +8347,8 @@ var _user$project$Puzzle$clearKey = function (puzzle) {
 				_elm_lang$html$Html$text('C')
 			]));
 };
-var _user$project$Puzzle$AddOperator = function (a) {
-	return {ctor: 'AddOperator', _0: a};
-};
-var _user$project$Puzzle$AddNumber = function (a) {
-	return {ctor: 'AddNumber', _0: a};
+var _user$project$Puzzle$AddToken = function (a) {
+	return {ctor: 'AddToken', _0: a};
 };
 var _user$project$Puzzle$tokenItem = F2(
 	function (puzzle, token) {
@@ -8375,7 +8368,7 @@ var _user$project$Puzzle$tokenItem = F2(
 							typeClass,
 							A2(_elm_lang$core$Basics_ops['++'], takenClass, validClass)))),
 					_elm_lang$html$Html_Events$onClick(
-					_user$project$Puzzle$AddNumber(token))
+					_user$project$Puzzle$AddToken(token))
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
@@ -8504,8 +8497,7 @@ var _user$project$Puzzle$view = function (puzzle) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_user$project$Puzzle$clearKey(puzzle),
-						_user$project$Puzzle$delKey(puzzle),
-						_user$project$Puzzle$checkKey(puzzle)
+						_user$project$Puzzle$delKey(puzzle)
 					]))
 			]));
 };
