@@ -28,7 +28,7 @@ init =
 
 get : Cmd Msg
 get =
-  Task.perform getFail getSucceed (Http.get puzzleDecoder "http://localhost:4000/api/puzzle")
+  Task.perform getFail getSucceed (Http.get puzzleDecoder "/api/puzzle")
 
 getFail result =
   let

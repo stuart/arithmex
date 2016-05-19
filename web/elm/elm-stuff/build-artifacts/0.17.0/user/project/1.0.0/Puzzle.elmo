@@ -132,7 +132,7 @@ var _user$project$Puzzle$get = A3(
 	_elm_lang$core$Task$perform,
 	_user$project$Puzzle$getFail,
 	_user$project$Puzzle$getSucceed,
-	A2(_evancz$elm_http$Http$get, _user$project$Puzzle$puzzleDecoder, 'http://localhost:4000/api/puzzle'));
+	A2(_evancz$elm_http$Http$get, _user$project$Puzzle$puzzleDecoder, '/api/puzzle'));
 var _user$project$Puzzle$init = function () {
 	var puzzle = {
 		id: 0,
