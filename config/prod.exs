@@ -21,9 +21,9 @@ config :arithmex, Arithmex.Endpoint,
 config :logger, level: :info
 
 config :arithmex, Arithmex.Repo,
-  adapter: Ecto.Adapters.Postgres
-  url: System.get_env("DATABASE_URL")
-  pool_size: 10
+  adapter: Ecto.Adapters.Postgres,
+  url: System.get_env("DATABASE_URL"),
+  pool_size: 10,
   ssl: true
 
 # ## SSL Support
