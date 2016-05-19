@@ -62,8 +62,8 @@ isValid solution token =
       Just last_token -> case last_token.token_type of
         NumberToken -> (token.token_type == OperatorToken) || (token.token_type == RPar && parCount solution > 0)
         OperatorToken -> (token.token_type == NumberToken) || (token.token_type == LPar)
-        LPar -> token.token_type == NumberToken
-        RPar -> token.token_type == OperatorToken
+        LPar -> token.token_type == NumberToken || token.token_type == LPar
+        RPar -> token.token_type == OperatorToken || (token.token_type == RPar && parCount solution > 0)
 
 parCount : Solution -> Int
 parCount solution =

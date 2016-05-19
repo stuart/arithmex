@@ -8102,9 +8102,11 @@ var _user$project$Solution$isValid = F2(
 				case 'OperatorToken':
 					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$LPar);
 				case 'LPar':
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken);
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$NumberToken) || _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$LPar);
 				default:
-					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$OperatorToken);
+					return _elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$OperatorToken) || (_elm_lang$core$Native_Utils.eq(token.token_type, _user$project$Solution$RPar) && (_elm_lang$core$Native_Utils.cmp(
+						_user$project$Solution$parCount(solution),
+						0) > 0));
 			}
 		}
 	});
